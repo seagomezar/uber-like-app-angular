@@ -123,6 +123,10 @@
           }
         }
       }
-    }},
-  "defaultProject": "uber-like-app"
+    }
+  },
+  "defaultProject": "uber-like-app",
+  "cli": {
+    "analytics": "bdf98180-3a9d-4df3-ba84-0f8f6316dada"
+  }
 }
