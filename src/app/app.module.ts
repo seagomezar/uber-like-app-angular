@@ -8,6 +8,8 @@ import { RealtimeMapModule } from './realtime-map/realtime-map.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { RealtimeMapV2Component } from './realtime-map-v2/realtime-map-v2.component';
 import { BottomBarComponent } from './bottom-bar/bottom-bar.component';
+import { AngularFireModule } from '@angular/fire';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -20,7 +22,8 @@ import { BottomBarComponent } from './bottom-bar/bottom-bar.component';
     BrowserModule,
     AppRoutingModule,
     RealtimeMapModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    AngularFireModule.initializeApp(environment.firebaseConfig)
   ],
   providers: [],
   bootstrap: [AppComponent]
