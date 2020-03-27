@@ -1,0 +1,19 @@
+{
+  "hosting": [
+    {
+      "target": "uber-like-app",
+      "public": "dist/uber-like-app",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ]
+}

@@ -1,4 +1,10 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { map_styles } from './map_styles';
+import { Observable } from 'rxjs';
+import {
+  AngularFirestoreCollection,
+  AngularFirestore
+} from "@angular/fire/firestore";
 
 @Component({
   selector: 'app-realtime-map-v2',
@@ -9,17 +15,26 @@ export class RealtimeMapV2Component implements AfterViewInit {
   @ViewChild("map", {static: true }) mapElement: ElementRef;
   map: any;
   myMarker: any;
+  myLocation: any;
+  driversCollection: AngularFirestoreCollection<any>;
+  driverMarker: any;
+  assignedDriverPosition$: Observable<any>;
+
+  constructor(private angularFirestore: AngularFirestore) {}
 
   ngAfterViewInit() {
     this.loadMap();
+    this.driversCollection = this.angularFirestore.collection("drivers", ref =>
+      ref.orderBy("order")
+    );
   }
 
   // Set Map
   loadMap() {
     let latLng = new google.maps.LatLng(6.236654, -75.580432);
-    let mapOptions = {
+    let mapOptions: google.maps.MapOptions = <google.maps.MapOptions>{
       center: latLng,
-      zoom: 13,
+      zoom: 16,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
       zoomControl: false,
       mapTypeControl: false,
@@ -27,208 +42,18 @@ export class RealtimeMapV2Component implements AfterViewInit {
       streetViewControl: false,
       rotateControl: false,
       fullscreenControl: false,
-      styles: [
-        {
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#212121"
-            }
-          ]
-        },
-        {
-          elementType: "labels.icon",
-          stylers: [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#757575"
-            }
-          ]
-        },
-        {
-          elementType: "labels.text.stroke",
-          stylers: [
-            {
-              color: "#212121"
-            }
-          ]
-        },
-        {
-          featureType: "administrative",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#757575"
-            }
-          ]
-        },
-        {
-          featureType: "administrative.country",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#9e9e9e"
-            }
-          ]
-        },
-        {
-          featureType: "administrative.land_parcel",
-          stylers: [
-            {
-              "visibility": "off"
-            }
-          ]
-        },
-        {
-          featureType: "administrative.locality",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#bdbdbd"
-            }
-          ]
-        },
-        {
-          featureType: "poi",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#757575"
-            }
-          ]
-        },
-        {
-          featureType: "poi.park",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#181818"
-            }
-          ]
-        },
-        {
-          featureType: "poi.park",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#616161"
-            }
-          ]
-        },
-        {
-          featureType: "poi.park",
-          elementType: "labels.text.stroke",
-          stylers: [
-            {
-              color: "#1b1b1b"
-            }
-          ]
-        },
-        {
-          featureType: "road",
-          elementType: "geometry.fill",
-          stylers: [
-            {
-              color: "#2c2c2c"
-            }
-          ]
-        },
-        {
-          featureType: "road",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#8a8a8a"
-            }
-          ]
-        },
-        {
-          featureType: "road.arterial",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#373737"
-            }
-          ]
-        },
-        {
-          featureType: "road.highway",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#3c3c3c"
-            }
-          ]
-        },
-        {
-          featureType: "road.highway.controlled_access",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#4e4e4e"
-            }
-          ]
-        },
-        {
-          featureType: "road.local",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#616161"
-            }
-          ]
-        },
-        {
-          featureType: "transit",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#757575"
-            }
-          ]
-        },
-        {
-          featureType: "water",
-          elementType: "geometry",
-          stylers: [
-            {
-              color: "#000000"
-            }
-          ]
-        },
-        {
-          featureType: "water",
-          elementType: "labels.text.fill",
-          stylers: [
-            {
-              color: "#3d3d3d"
-            }
-          ]
-        }
-      ]
+      styles: map_styles
     };
-    console.log(this.mapElement)
     this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
     this.loadMyPosition();
   }
 
-  // Get My Position
   loadMyPosition() {
     if (window.navigator.geolocation) {
       window.navigator.geolocation.getCurrentPosition(
         this.setMyLocationOnMap.bind(this),
         err => {
-          console.log(
-            "No se pudo obtener la location, usando location by default",
-            err
-          );
+          console.log("We can not get current location, using location by default", err);
           this.setMyLocationOnMap({
             coords: {
               latitude: 6.208488,
@@ -237,20 +62,8 @@ export class RealtimeMapV2Component implements AfterViewInit {
           });
         }
       );
-      this.setMyLocationOnMap({
-        coords: {
-          latitude: 6.208488,
-          longitude: -75.563577
-        }
-      });
     } else {
-      alert("Tu navegador no soporta geolocalización");
-      this.setMyLocationOnMap({
-        coords: {
-          latitude: 6.208488,
-          longitude: -75.563577
-        }
-      });
+      alert("Your browser does not support Geolocation");
     }
   }
 
@@ -263,13 +76,38 @@ export class RealtimeMapV2Component implements AfterViewInit {
       position.coords.latitude,
       position.coords.longitude
     );
-
     this.myMarker = new google.maps.Marker({
       map: this.map,
-      animation: google.maps.Animation.BOUNCE,
+      animation: google.maps.Animation.DROP,
       position: latLng,
-      icon: { url: "assets/photo.jpg" }
     });
+    this.map.setCenter(latLng);
+    this.myLocation = position.coords;
+  }
+
+  async requestTo(destination) {
+    const response = await this.lookForDriverTo(destination)
+    this.assignedDriverPosition$ = this.driversCollection.doc(response.driver.id).valueChanges();
+    this.assignedDriverPosition$.subscribe(position => {
+      if (this.driverMarker) { // If DriverMarker already exists
+        this.driverMarker.setMap(null);
+        this.driverMarker = null;
+      }
+      let latLng = new google.maps.LatLng(position.lat, position.lng);
+      this.driverMarker = new google.maps.Marker({
+        map: this.map,
+        position: latLng,
+        icon: { url: "assets/car.png" }
+      });
+    });
+  }
+
+  lookForDriverTo(destination): Promise<{driver: {id: string}}> {
+    return new Promise( (accept, reject)=>{
+      // Do heavy work here using the destination to find nearby driver
+      accept({driver: {id: "WGLuf6IJDmLXzC9nP8Na"}})
+    })
+    
   }
 
 }

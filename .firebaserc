@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "music-generator-react": {
+      "hosting": {
+        "uber-like-app": [
+          "uber-like-app-angular"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color:#eeeeee;
+}
+nav > ul {
+    padding-left: 0;
+    height: 40px;
+}
+nav > ul > li {
+    display: inline-block;
+    list-style: none;
+    color: #777777;
+    width: 33%;
+    text-align: center;
+    font-size: 12px;
+}
+nav > ul > li > i{
+    font-size: 12px;
+}
+nav > ul > li:first-child {
+    color: black;
+}
