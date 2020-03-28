@@ -6,6 +6,9 @@ Este proyecto es una aplicación que replica la pantalla de solicitud de conduct
 - Usando Angular Maps (AKA AGM-Core)
 - Usando el componente nativo de angular llamado @angular/google-maps
 
+Aquí puedes ver la presentación donde se expone este proyecto:
+[Link a las diapositivas](https://docs.google.com/presentation/d/1OZoKo0sEhyZOarV82jQjPtcR41kAbdIj4GntNVUbvo0)
+
 ## Comenzando 🚀
 
 _Clona el repositorio_
