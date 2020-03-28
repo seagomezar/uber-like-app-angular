@@ -14,6 +14,7 @@ import { map_styles } from '../realtime-map-v2/map_styles';
 })
 export class RealtimeMapV3Component implements AfterViewInit {
   myLocation = {lat: 6.236654, lng: -75.580432};
+  driverLocation: any;
   map_styles = map_styles;
   zoomLevel = 15;
   zoomControl = false;
@@ -23,6 +24,8 @@ export class RealtimeMapV3Component implements AfterViewInit {
   driverMarker: any;
   assignedDriverPosition$: Observable<any>;
   routePath: any;
+  lineEndPoint: any;
+  lineStartPoint: any;
   
 
   constructor(private angularFirestore: AngularFirestore) {}
@@ -62,16 +65,7 @@ export class RealtimeMapV3Component implements AfterViewInit {
     this.assignedDriverPosition$ = this.driversCollection.doc(response.driver.id).valueChanges();
     this.drawLine(response.driver.initialPosition, response.driver.endPosition);
     this.assignedDriverPosition$.subscribe(position => {
-      if (this.driverMarker) { // If DriverMarker already exists
-        this.driverMarker.setMap(null);
-        this.driverMarker = null;
-      }
-      let latLng = new google.maps.LatLng(position.lat, position.lng);
-      this.driverMarker = new google.maps.Marker({
-        map: this.map,
-        position: latLng,
-        icon: { url: "assets/car.png" }
-      });
+      this.driverLocation = {lat: position.lat, lng: position.lng};
     });
     this.updateDriversPosition(response.driver.id)
   }
@@ -92,18 +86,8 @@ export class RealtimeMapV3Component implements AfterViewInit {
   }
 
   drawLine(a, b){
-    if(!this.routePath) {
-      this.routePath = new google.maps.Polyline({
-        path: [a, b],
-        geodesic: true,
-        strokeColor: '#000000',
-        strokeOpacity: 1.0,
-        strokeWeight: 2
-      });
-      this.routePath.setMap(null);
-      this.routePath.setMap(this.map);
-    }
-    
+    this.lineStartPoint = a;
+    this.lineEndPoint = b;
   }
 
   // This function should be on the backend or in drivers app but...
