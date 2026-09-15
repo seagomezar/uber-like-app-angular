@@ -1,40 +1,44 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { map_styles } from './map_styles';
-import { Observable } from 'rxjs';
-import {
-  AngularFirestoreCollection,
-  AngularFirestore
-} from "@angular/fire/firestore";
-import 'firebase/firestore';
+import { DriverService, LocationCoord } from '../services/driver.service';
 
 @Component({
   selector: 'app-realtime-map-v2',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './realtime-map-v2.component.html',
   styleUrls: ['./realtime-map-v2.component.scss']
 })
-export class RealtimeMapV2Component implements AfterViewInit {
-  @ViewChild("map", {static: true }) mapElement: ElementRef;
-  map: any;
-  myMarker: any;
-  myLocation: any;
-  driversCollection: AngularFirestoreCollection<any>;
-  driverMarker: any;
-  assignedDriverPosition$: Observable<any>;
-  routePath: any;
+export class RealtimeMapV2Component implements AfterViewInit, OnDestroy {
+  @ViewChild('map', { static: true }) mapElement!: ElementRef<HTMLDivElement>;
 
-  constructor(private angularFirestore: AngularFirestore) {}
+  map!: google.maps.Map;
+  myMarker: google.maps.Marker | null = null;
+  driverMarker: google.maps.Marker | null = null;
+  routePath: google.maps.Polyline | null = null;
+  myLocation: LocationCoord = { lat: 6.208488, lng: -75.563577 };
+
+  private driverSub?: Subscription;
+
+  constructor(private driverService: DriverService) {}
 
   ngAfterViewInit() {
     this.loadMap();
-    this.driversCollection = this.angularFirestore.collection("drivers", ref =>
-      ref.orderBy("order")
-    );
   }
 
-  // Set Map
+  ngOnDestroy() {
+    this.driverSub?.unsubscribe();
+    this.driverService.stopSimulation();
+    if (this.myMarker) this.myMarker.setMap(null);
+    if (this.driverMarker) this.driverMarker.setMap(null);
+    if (this.routePath) this.routePath.setMap(null);
+  }
+
   loadMap() {
-    let latLng = new google.maps.LatLng(6.236654, -75.580432);
-    let mapOptions: google.maps.MapOptions = <google.maps.MapOptions>{
+    const latLng = new google.maps.LatLng(this.myLocation.lat, this.myLocation.lng);
+    const mapOptions: google.maps.MapOptions = {
       center: latLng,
       zoom: 16,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
@@ -46,112 +50,88 @@ export class RealtimeMapV2Component implements AfterViewInit {
       fullscreenControl: false,
       styles: map_styles
     };
+
     this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
     this.loadMyPosition();
   }
 
   loadMyPosition() {
-    if (window.navigator.geolocation) {
+    if (typeof window !== 'undefined' && window.navigator?.geolocation) {
       window.navigator.geolocation.getCurrentPosition(
-        this.setMyLocationOnMap.bind(this),
-        err => {
-          console.log("We can not get current location, using location by default", err);
+        pos => {
           this.setMyLocationOnMap({
-            coords: {
-              latitude: 6.208488,
-              longitude: -75.563577
-            }
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
           });
+        },
+        err => {
+          console.log('[v2] Usando ubicación predeterminada por fallback:', err);
+          this.setMyLocationOnMap(this.myLocation);
         }
       );
     } else {
-      alert("Your browser does not support Geolocation");
+      this.setMyLocationOnMap(this.myLocation);
     }
   }
-  setMyLocationOnMap(position) {
+
+  setMyLocationOnMap(coords: LocationCoord) {
+    this.myLocation = coords;
     if (this.myMarker) {
       this.myMarker.setMap(null);
       this.myMarker = null;
     }
-    let latLng = new google.maps.LatLng(
-      position.coords.latitude,
-      position.coords.longitude
-    );
+
+    const latLng = new google.maps.LatLng(coords.lat, coords.lng);
     this.myMarker = new google.maps.Marker({
       map: this.map,
       animation: google.maps.Animation.DROP,
       position: latLng,
-      icon: { url: "assets/photo.jpg" }
+      icon: { url: 'assets/photo.jpg' },
+      title: 'Mi Ubicación'
     });
+
     this.map.setCenter(latLng);
-    this.myLocation = position.coords;
   }
 
-  async requestTo(destination) {
-    const response = await this.lookForDriverTo(destination)
-    this.assignedDriverPosition$ = this.driversCollection.doc(response.driver.id).valueChanges();
-    this.drawLine(response.driver.initialPosition, response.driver.endPosition);
-    this.assignedDriverPosition$.subscribe(position => {
-      if (this.driverMarker) { // If DriverMarker already exists
+  async requestTo(destination: string) {
+    const trip = await this.driverService.requestDriver(destination, this.myLocation);
+    this.drawLine(trip.initialPosition, trip.endPosition);
+
+    this.driverSub?.unsubscribe();
+    this.driverSub = this.driverService.getDriverPosition$(trip.driverId).subscribe(position => {
+      if (!position) return;
+
+      if (this.driverMarker) {
         this.driverMarker.setMap(null);
         this.driverMarker = null;
       }
-      let latLng = new google.maps.LatLng(position.lat, position.lng);
+
+      const latLng = new google.maps.LatLng(position.lat, position.lng);
       this.driverMarker = new google.maps.Marker({
         map: this.map,
         position: latLng,
-        icon: { url: "assets/car.png" }
+        icon: { url: 'assets/car.png' },
+        title: 'Conductor Uber'
       });
     });
-    this.updateDriversPosition(response.driver.id)
   }
 
-  lookForDriverTo(destination): Promise<{driver: {id: string, initialPosition: any, endPosition: any}}> {
-    return new Promise( async (accept, reject)=>{
-      // Do heavy work here using the destination to find nearby driver
-
-      const driver = {
-        id: "WGLuf6IJDmLXzC9nP8Na", 
-        initialPosition: {lat: 4.682905, lng: -74.070275},
-        endPosition: {lat: 4.679705, lng: -74.066977}
-      };
-      //Set initial position
-      await this.driversCollection.doc(driver.id).set(driver.initialPosition)
-      accept( { driver });
-    })
-  }
-
-  drawLine(a, b){
-    if(!this.routePath) {
-      this.routePath = new google.maps.Polyline({
-        path: [a, b],
-        geodesic: true,
-        strokeColor: '#000000',
-        strokeOpacity: 1.0,
-        strokeWeight: 2
-      });
+  drawLine(a: LocationCoord, b: LocationCoord) {
+    if (this.routePath) {
       this.routePath.setMap(null);
-      this.routePath.setMap(this.map);
     }
-    
-  }
 
-  // This function should be on the backend or in drivers app but...
-  updateDriversPosition(driverId) {
-    let position = {
-      lat: 4.682905, 
-      lng: -74.070275
-    };
-    const step = 0.000006; // Play with the distance of every driver step
-    const refreshTime = 400; // Play with the refresh position of the driver
-    const refreshId = setInterval(async () =>{
-      position.lat -= step;
-      position.lng += step;
-      await this.driversCollection.doc(driverId).set(position)
-      if (position.lat < 4.679705) {
-        clearInterval(refreshId);
-      }
-    }, refreshTime);
-  }
+    this.routePath = new google.maps.Polyline({
+      path: [
+        new google.maps.LatLng(a.lat, a.lng),
+        new google.maps.LatLng(b.lat, b.lng)
+      ],
+      geodesic: true,
+      strokeColor: '#000000',
+      strokeOpacity: 1.0,
+      strokeWeight: 3
+    });
 
+    this.routePath.setMap(this.map);
+  }
 }

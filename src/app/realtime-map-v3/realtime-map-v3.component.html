@@ -1,48 +1,56 @@
-<agm-map
-    [latitude]="myLocation.lat"
-    [longitude]="myLocation.lng"
-    [zoom]="zoomLevel"
-    [styles]="map_styles"
-    [zoomControl]="zoomControl"
-    [streetViewControl]="streetViewControl"
-    [mapTypeControl]="mapTypeControl">
+<div class="map-view">
+  <google-map
+    height="350px"
+    width="100%"
+    [center]="mapCenter()"
+    [zoom]="zoomLevel()"
+    [options]="mapOptions"
+  >
+    <map-marker
+      [position]="userLocation()"
+      [options]="userMarkerOptions"
+    ></map-marker>
 
-    <!--Marker for the myLocation-->
-    <agm-marker *ngIf="myLocation"
-      [latitude]="myLocation.lat"
-      [longitude]="myLocation.lng"
-      iconUrl="assets/photo.jpg"
-    >
-    </agm-marker>
-    <!--Marker for the driver-->
-    <agm-marker *ngIf="driverLocation"
-      [latitude]="driverLocation.lat"
-      [longitude]="driverLocation.lng"
-      iconUrl="assets/car.png"
-    >
-    <!-- Polyline for the route of driver -->
-    <agm-polyline [strokeColor]="'black'" *ngIf="lineStartPoint && lineEndPoint">
-        <agm-polyline-point
-          [latitude]="lineStartPoint.lat"
-          [longitude]="lineStartPoint.lng"
-        >
-        </agm-polyline-point>
-        <agm-polyline-point
-          [latitude]="lineEndPoint.lat"
-          [longitude]="lineEndPoint.lng"
-        >
-        </agm-polyline-point>
-      </agm-polyline>
-    </agm-marker>
-</agm-map>
-<div class="alert">
+    @if (driverLocation(); as dLoc) {
+      <map-marker
+        [position]="dLoc"
+        [options]="driverMarkerOptions"
+      ></map-marker>
+    }
+
+    @if (routeWaypoints().length > 0) {
+      <map-polyline
+        [path]="routeWaypoints()"
+        [options]="polylineOptions"
+      ></map-polyline>
+    }
+  </google-map>
+
+  <div class="version-banner">
+    <span class="badge">v3</span> Enfoque: <strong>Signals & Reactividad</strong> (Reemplazo moderno de @agm/core)
+  </div>
+
+  <div class="alert">
     <a class="button"><i class="material-icons">verified_user</i></a>
-    <p> <strong>Evita la propagación</strong> <br/> Viaja sólo lo necesario</p>
-</div>
-<div class="search">
+    <p><strong>Evita la propagación</strong><br />Viaja sólo lo necesario</p>
+  </div>
+
+  <div class="search">
     <input type="text" placeholder="Where to?" />
+  </div>
+
+  <ul class="destinations">
+    <li>
+      <a class="destination-btn" (click)="requestTo('home')">
+        <i class="material-icons">home</i>
+        <p><strong>Home</strong><br />La Pradera Sopetran</p>
+      </a>
+    </li>
+    <li>
+      <a class="destination-btn" (click)="requestTo('work')">
+        <i class="material-icons">work</i>
+        <p><strong>Work</strong><br />Globant Medellín</p>
+      </a>
+    </li>
+  </ul>
 </div>
-<ul class="destinations">
-    <li><a class="button" (click)="requestTo('home')"><i class="material-icons">home</i><p><strong>Home</strong><br/> La Pradera Sopetran</p></a></li>
-    <li><a class="button"><i class="material-icons">work</i><p><strong>Work</strong><br/> Globant Medellín</p></a></li>
-</ul>

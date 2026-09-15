@@ -1,9 +1,58 @@
-
-<h1>Test</h1>
-<google-map
-    height="400px"
-    width="1000px"
+<div class="map-view">
+  <google-map
+    height="350px"
+    width="100%"
     [center]="center"
-    [zoom]="zoom">
+    [zoom]="zoom"
+    [options]="mapOptions"
+  >
+    @if (myLocation) {
+      <map-marker
+        [position]="myLocation"
+        [options]="myMarkerOptions"
+      ></map-marker>
+    }
+
+    @if (driverLocation) {
+      <map-marker
+        [position]="driverLocation"
+        [options]="driverMarkerOptions"
+      ></map-marker>
+    }
+
+    @if (polylinePath.length > 0) {
+      <map-polyline
+        [path]="polylinePath"
+        [options]="polylineOptions"
+      ></map-polyline>
+    }
   </google-map>
 
+  <div class="version-banner">
+    <span class="badge">v1</span> Enfoque: <strong>@angular/google-maps</strong> (Componente Nativo Angular)
+  </div>
+
+  <div class="alert">
+    <a class="button"><i class="material-icons">verified_user</i></a>
+    <p><strong>Evita la propagación</strong><br />Viaja sólo lo necesario</p>
+  </div>
+
+  <div class="search">
+    <input type="text" placeholder="Where to?" />
+  </div>
+
+  <ul class="destinations">
+    <li>
+      <a class="destination-btn" (click)="requestTo('home')">
+        <i class="material-icons">home</i>
+        <p><strong>Home</strong><br />La Pradera Sopetran</p>
+      </a>
+    </li>
+    <li>
+      <a class="destination-btn" (click)="requestTo('work')">
+        <i class="material-icons">work</i>
+        <p><strong>Work</strong><br />Globant Medellín</p>
+      </a>
+    </li>
+  </ul>
+</div>

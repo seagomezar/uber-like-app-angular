@@ -1,14 +1,115 @@
-.button {
-    position: fixed;
-    border-radius: 50%;
-    background-color: white;
-    top: 10px;
-    left: 10px;
-    z-index: 1;
-    padding-top: 5px 5px;
-    width: 48px;
-    height: 48px;
+.top-header {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    pointer-events: auto;
+
+    .menu-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      color: #111111;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.15s ease, background 0.15s ease;
+
+      &:hover {
+        background: #f0f0f0;
+        transform: scale(1.04);
+      }
+
+      i {
+        font-size: 22px;
+        line-height: 1;
+      }
+    }
+
+    .app-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #000;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(6px);
+      letter-spacing: -0.2px;
+    }
+  }
+
+  .version-nav {
+    display: flex;
+    gap: 6px;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 4px;
+    border-radius: 24px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(6px);
+
+    .version-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 18px;
+      text-decoration: none;
+      color: #555555;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      .chip-tag {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        background: #e5e5e5;
+        padding: 2px 5px;
+        border-radius: 6px;
+        color: #333;
+      }
+
+      &:hover {
+        background: #f0f0f0;
+        color: #000;
+      }
+
+      &.active {
+        background: #000000;
+        color: #ffffff;
+
+        .chip-tag {
+          background: #333333;
+          color: #27ae60;
+        }
+      }
+    }
+  }
 }
-i {
-    margin: 12px 12px 12px 12px;
+
+@media (max-width: 600px) {
+  .top-header {
+    .brand .app-title {
+      display: none;
+    }
+    .version-nav .version-chip .chip-label {
+      display: none;
+    }
+  }
 }

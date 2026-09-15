@@ -2,7 +2,7 @@
   "hosting": [
     {
       "target": "uber-like-app",
-      "public": "dist/uber-like-app",
+      "public": "dist/uber-like-app/browser",
       "ignore": [
         "firebase.json",
         "**/.*",
